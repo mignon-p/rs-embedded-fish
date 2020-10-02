@@ -3,11 +3,13 @@ use embedded_graphics::drawable::Drawable;
 use embedded_graphics::drawable::Pixel;
 use embedded_graphics::geometry::Point;
 use embedded_graphics::geometry::Size;
-use embedded_graphics::pixelcolor::PixelColor;
+// use embedded_graphics::pixelcolor::PixelColor;
+use embedded_graphics::pixelcolor::Rgb565;
 use embedded_graphics::pixelcolor::raw::RawU16;
 use embedded_graphics::prelude::DrawTarget;
 use rand::Rng;
 use rand_pcg::Pcg32;
+use std::convert::TryInto;
 
 const FUDGE_FACTOR: i32 = 2;
 const NUM_FRAMES: usize = 3;
@@ -54,21 +56,25 @@ struct TankIterator {
     position: Point,
 }
 
+fn cvt(u: u32) -> i32 {
+    u.try_into().unwrap()
+}
+
 impl Sprite {
     fn get_point(&self, pt: &Point, animation: u8) -> PointValue {
         let x = pt.x - FUDGE_FACTOR;
         let y = pt.y - FUDGE_FACTOR;
         if (pt.x < 0 || pt.y < 0 ||
-            pt.x >= self.size.width ||
-            pt.y >= self.size.height) {
-            Transparent
+            pt.x >= cvt(self.size.width) ||
+            pt.y >= cvt(self.size.height)) {
+            PointValue::Transparent
         } else {
-            let idx = x + y * self.size.width;
-            let c = frames[animation][idx];
+            let idx = x + y * cvt(self.size.width);
+            let c = self.frames[animation.into()][idx];
             if c == TRANSPARENT {
-                Transparent
+                PointValue::Transparent
             } else {
-                Opaque(c)
+                PointValue::Opaque(c)
             }
         }
     }
@@ -81,8 +87,8 @@ impl Sprite {
         let num_words = width * height;
 
         let mut sprite = Sprite {
-            size: Size::new(width, height),
-            frames: [NUM_FRAMES: &[]],
+            size: Size::new(width.into(), height.into()),
+            frames: [&[]; NUM_FRAMES],
         };
 
         for frame in (0..3) {
@@ -99,40 +105,42 @@ impl Fish {
     fn get_point(&self, pt: &Point) -> PointValue {
         if (pt.x < self.upper_left.x ||
             pt.y < self.upper_left.y ||
-            pt.x >= self.upper_left.x + self.size.width ||
-            pt.y >= self.upper_left.y + self.size.height) {
-            OutOfRange
+            pt.x >= self.upper_left.x + cvt(self.size.width) ||
+            pt.y >= self.upper_left.y + cvt(self.size.height)) {
+            PointValue::OutOfRange
         } else {
             let mut x = pt.x - self.upper_left.x;
             let y = pt.y - self.upper_left.y;
             if self.direction == Dir::Left {
-                x = self.size.width - (x + 1);
+                x = cvt(self.size.width) - (x + 1);
             }
             self.fish_type.get_point(Point::new(x, y), self.animation)
         }
     }
 
     fn on_screen(&self, screen: &Size) -> bool {
-        (self.upper_left.y <= screen.height &&
-         self.upper_left.y + self.size.height >= 0 &&
-         self.upper_left.x <= screen.width &&
-         self.upper_left.x + self.size.width >= 0)
+        (self.upper_left.y <= cvt(screen.height) &&
+         self.upper_left.y + cvt(self.size.height) >= 0 &&
+         self.upper_left.x <= cvt(screen.width) &&
+         self.upper_left.x + cvt(self.size.width) >= 0)
     }
 
     fn randomize<T: Rng>(&mut self, screen: &Size, rng: &mut T) {
         self.animation = rng.gen_range(1, NUM_FRAMES);
         if rng.gen() {
             self.direction = Dir::Left;
-            self.upper_left.x = screen.width;
+            self.upper_left.x = cvt(screen.width);
         } else {
             self.direction = Dir::Right;
-            self.upper_left.x = -self.size.width;
+            self.upper_left.x = -cvt(self.size.width);
         }
-        self.upper_left.y = rng.gen_range(0, screen.height - self.size.height);
+        self.upper_left.y =
+            cvt(rng.gen_range(0, screen.height - self.size.height));
     }
 
     fn randomize_x<T: Rng>(&mut self, screen: &Size, rng: &mut T) {
-        self.upper_left.x = rng.gen_range(0, screen.width - self.size.width);
+        self.upper_left.x =
+            cvt(rng.gen_range(0, screen.width - self.size.width));
     }
 
     fn swim<T: Rng>(&mut self, screen: &Size, rng: &mut T) {
@@ -198,12 +206,12 @@ impl FishTank {
     }
 
     fn get_point(&self, pt: &Point) -> PointValue {
-        let mut ret = OutOfRange;
+        let mut ret = PointValue::OutOfRange;
         for i in (0..NUM_FISH) {
             match self.fish[i].get_point(pt) {
-                Opaque(c)   => return Opaque(c),
-                Transparent => ret = Transparent,
-                OutOfRange  => (),
+                PointValue::Opaque(c)   => return PointValue::Opaque(c),
+                PointValue::Transparent => ret = PointValue::Transparent,
+                PointValue::OutOfRange  => (),
             }
         }
 
@@ -234,8 +242,8 @@ impl TankIterator {
         }
     }
 
-    fn some_color(c: u16) -> Option<Self::Item> {
-        Pixel(self.position, RawU16::from_u32(c))
+    fn some_color(&self, c: u16) -> Option<Pixel<Rgb565>> {
+        Some(Pixel(self.position, RawU16::from_u32(c)))
     }
 }
 
@@ -244,18 +252,18 @@ impl Iterator for TankIterator {
 
     fn next(&mut self) -> Option<Self::Item> {
         loop {
-            if self.position.y >= tank.size.height {
+            if self.position.y >= cvt(self.tank.size.height) {
                 return None;
             } else {
-                let pv = tank.get_point(&self.position);
+                let pv = self.tank.get_point(&self.position);
                 let ret = match pv {
-                    OutOfRange    => None,
-                    Transparent   => some_color(BACKGROUND),
-                    Opaque(color) => some_color(color),
-                }
+                    PointValue::OutOfRange    => None,
+                    PointValue::Transparent   => self.some_color(BACKGROUND),
+                    PointValue::Opaque(color) => self.some_color(color),
+                };
 
                 self.position.x += 1;
-                if self.position.x >= tank.size.width {
+                if self.position.x >= cvt(self.tank.size.width) {
                     self.position.x = 0;
                     self.position.y += 1;
                 }
