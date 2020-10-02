@@ -6,7 +6,9 @@ use rand::Rng;
 const FUDGE_FACTOR: i32 = 2;
 const NUM_FRAMES: usize = 3;
 const NUM_SPRITES: usize = 10;
+const NUM_FISH: usize = 10;
 const TRANSPARENT: u16 = 0xdead;
+const BACKGROUND: u16 = 0x1f;   // blue
 
 const SPRITE_DATA: &[u8] = include_bytes!("fish.raw");
 
@@ -32,6 +34,18 @@ struct Fish {
     size:       Size,
     direction:  Dir,
     animation:  u8,
+}
+
+struct FishTank {
+    sprites: [Sprite; NUM_SPRITES],
+    fish:    [Fish;   NUM_FISH],
+    size:    Size,
+    rng:     Pcg32,
+}
+
+struct TankIterator {
+    tank:     &FishTank,
+    position: Point,
 }
 
 impl Sprite {
@@ -134,6 +148,90 @@ impl Fish {
 
         if self.on_screen(screen) == false {
             self.randomize(screen. rng);
+        }
+    }
+
+    fn new(sprite: &Sprite) -> Fish {
+        let ff2 = FUDGE_FACTOR * 2;
+        Fish {
+            fish_type:  sprite,
+            upper_left: Point::new(0, 0),
+            size:       Size::new(sprite.size.width + ff2,
+                                  sprite.size.height + ff2),
+            direction:  Dir::Right,
+            animation:  0,
+        }
+    }
+}
+
+impl FishTank {
+    fn new(screen_size: Size, seed: u64) -> FishTank {
+        let sprite_data = SPRITE_DATA.as_slice_of::<u16>().unwrap();
+        let dummy_sprite = Sprite::make_sprite(0, sprite_data);
+        let mut tank = FishTank {
+            sprites: [dummy_sprite; NUM_SPRITES],
+            fish:    [Fish::new(&dummy_sprite); NUM_FISH],
+            size:    screen_size,
+            rng:     Pcg32::new(seed),
+        };
+
+        for i in (0..NUM_FISH) { // assumes NUM_FISH <= NUM_SPRITES
+            tank.sprites[i] = Sprite::make_sprite(i, sprite_data);
+            tank.fish[i]    = Fish::new(&tank.sprites[i]);
+        }
+
+        tank
+    }
+
+    fn swim(&mut self) {
+        for i in (0..NUM_FISH) {
+            self.fish[i].swim(&self.size, &mut self.rng);
+        }
+    }
+}
+
+impl IntoIterator for FishTank {
+    type Item = Pixel<Rgb565>;
+    type IntoIter = TankIterator;
+
+    fn into_iter(self) -> Self::IntoIter {
+        TankIterator::new(self)
+    }
+}
+
+impl Drawable<Rgb565> for FishTank {
+    fn draw<D: DrawTarget<Rgb565>>(self, display: &mut D) -> Result<(), D::Error> {
+        display.draw_iter(self)
+    }
+}
+
+impl TankIterator {
+    fn new(fish_tank: &FishTank) -> TankIterator {
+        TankIterator {
+            tank:     fish_tank,
+            position: Point::new(0, 0),
+        }
+    }
+}
+
+impl Iterator for TankIterator {
+    type Item = Pixel<Rgb565>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.position.y >= tank.size.height {
+            None
+        } else {
+            let pv = self.get_point(&self.position);
+            self.position.x += 1;
+            if self.position.x >= tank.size.width {
+                self.position.x = 0;
+                self.position.y += 1;
+            }
+
+            match pv {
+                OutOfRange => (),
+                Transparent => 
+            }
         }
     }
 }
