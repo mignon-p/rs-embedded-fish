@@ -1,7 +1,13 @@
 use byte_slice_cast::*;
+use embedded_graphics::drawable::Drawable;
+use embedded_graphics::drawable::Pixel;
 use embedded_graphics::geometry::Point;
 use embedded_graphics::geometry::Size;
+use embedded_graphics::pixelcolor::PixelColor;
+use embedded_graphics::pixelcolor::raw::RawU16;
+use embedded_graphics::prelude::DrawTarget;
 use rand::Rng;
+use rand_pcg::Pcg32;
 
 const FUDGE_FACTOR: i32 = 2;
 const NUM_FRAMES: usize = 3;
@@ -178,6 +184,8 @@ impl FishTank {
         for i in (0..NUM_FISH) { // assumes NUM_FISH <= NUM_SPRITES
             tank.sprites[i] = Sprite::make_sprite(i, sprite_data);
             tank.fish[i]    = Fish::new(&tank.sprites[i]);
+            tank.fish[i].randomize  (tank.size, tank.rng);
+            tank.fish[i].randomize_x(tank.size, tank.rng);
         }
 
         tank
@@ -187,6 +195,19 @@ impl FishTank {
         for i in (0..NUM_FISH) {
             self.fish[i].swim(&self.size, &mut self.rng);
         }
+    }
+
+    fn get_point(&self, pt: &Point) -> PointValue {
+        let mut ret = OutOfRange;
+        for i in (0..NUM_FISH) {
+            match self.fish[i].get_point(pt) {
+                Opaque(c)   => return Opaque(c),
+                Transparent => ret = Transparent,
+                OutOfRange  => (),
+            }
+        }
+
+        ret
     }
 }
 
@@ -212,25 +233,36 @@ impl TankIterator {
             position: Point::new(0, 0),
         }
     }
+
+    fn some_color(c: u16) -> Option<Self::Item> {
+        Pixel(self.position, RawU16::from_u32(c))
+    }
 }
 
 impl Iterator for TankIterator {
     type Item = Pixel<Rgb565>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.position.y >= tank.size.height {
-            None
-        } else {
-            let pv = self.get_point(&self.position);
-            self.position.x += 1;
-            if self.position.x >= tank.size.width {
-                self.position.x = 0;
-                self.position.y += 1;
-            }
+        loop {
+            if self.position.y >= tank.size.height {
+                return None;
+            } else {
+                let pv = tank.get_point(&self.position);
+                let ret = match pv {
+                    OutOfRange    => None,
+                    Transparent   => some_color(BACKGROUND),
+                    Opaque(color) => some_color(color),
+                }
 
-            match pv {
-                OutOfRange => (),
-                Transparent => 
+                self.position.x += 1;
+                if self.position.x >= tank.size.width {
+                    self.position.x = 0;
+                    self.position.y += 1;
+                }
+
+                if let Some(_) = ret {
+                    return ret;
+                }
             }
         }
     }
