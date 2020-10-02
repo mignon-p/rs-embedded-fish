@@ -71,8 +71,13 @@ impl Sprite {
             pt.y >= cvt(self.size.height)) {
             PointValue::Transparent
         } else {
-            let idx = x + y * cvt(self.size.width);
-            let c = self.frames[animation.into()][idx];
+            let x: usize = x.try_into().unwrap();
+            let y: usize = y.try_into().unwrap();
+            let width: usize = self.size.width.try_into().unwrap();
+            let idx: usize = x + y * width;
+            let frame_no: usize = animation.into();
+            let frame: &[u16] = self.frames[frame_no];
+            let c = frame[idx];
             if c == TRANSPARENT {
                 PointValue::Transparent
             } else {
@@ -128,7 +133,9 @@ impl Fish {
     }
 
     fn randomize<T: Rng>(&mut self, screen: &Size, rng: &mut T) {
-        self.animation = rng.gen_range(1, NUM_FRAMES.try_into().unwrap());
+        let lo: u8 = 0;
+        let hi: u8 = NUM_FRAMES.try_into().unwrap();
+        self.animation = rng.gen_range(lo, hi);
         if rng.gen() {
             self.direction = Dir::Left;
             self.upper_left.x = cvt(screen.width);
@@ -168,7 +175,7 @@ impl Fish {
     }
 
     fn new(sprite: &Sprite) -> Fish {
-        let ff2 = (FUDGE_FACTOR * 2).try_into().unwrap();
+        let ff2: u32 = (FUDGE_FACTOR * 2).try_into().unwrap();
         Fish {
             fish_type:  sprite,
             upper_left: Point::new(0, 0),
@@ -239,9 +246,9 @@ impl TankIterator {
         let r = c >> 11;
         let g = (c >> 5) & 0x3f;
         let b = c & 0x1f;
-        Some(Pixel(self.position, Rgb565::new(r.try_into().unwrap() << 3,
-                                              g.try_into().unwrap() << 2,
-                                              g.try_into().unwrap() << 3)))
+        Some(Pixel(self.position, Rgb565::new((r << 3).try_into().unwrap(),
+                                              (g << 2).try_into().unwrap(),
+                                              (b << 3).try_into().unwrap())))
     }
 }
 
