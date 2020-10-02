@@ -128,7 +128,7 @@ impl Fish {
     }
 
     fn randomize<T: Rng>(&mut self, screen: &Size, rng: &mut T) {
-        self.animation = rng.gen_range(1, NUM_FRAMES.try_into().wrap());
+        self.animation = rng.gen_range(1, NUM_FRAMES.try_into().unwrap());
         if rng.gen() {
             self.direction = Dir::Left;
             self.upper_left.x = cvt(screen.width);
@@ -158,7 +158,7 @@ impl Fish {
         }
 
         self.animation += 1;
-        if self.animation >= NUM_FRAMES.try_into().wrap() {
+        if self.animation >= NUM_FRAMES.try_into().unwrap() {
             self.animation = 0;
         }
 
@@ -168,7 +168,7 @@ impl Fish {
     }
 
     fn new(sprite: &Sprite) -> Fish {
-        let ff2 = (FUDGE_FACTOR * 2).try_into().wrap();
+        let ff2 = (FUDGE_FACTOR * 2).try_into().unwrap();
         Fish {
             fish_type:  sprite,
             upper_left: Point::new(0, 0),
@@ -221,18 +221,9 @@ impl FishTank {
     }
 }
 
-impl IntoIterator for FishTank {
-    type Item = Pixel<Rgb565>;
-    type IntoIter = TankIterator;
-
-    fn into_iter(&self) -> Self::IntoIter {
-        TankIterator::new(self)
-    }
-}
-
 impl Drawable<Rgb565> for FishTank {
     fn draw<D: DrawTarget<Rgb565>>(&self, display: &mut D) -> Result<(), D::Error> {
-        display.draw_iter(self)
+        display.draw_iter(TankIterator::new(self))
     }
 }
 
@@ -245,7 +236,12 @@ impl TankIterator {
     }
 
     fn some_color(&self, c: u16) -> Option<Pixel<Rgb565>> {
-        Some(Pixel(self.position, RawU16::from_u32(c)))
+        let r = c >> 11;
+        let g = (c >> 5) & 0x3f;
+        let b = c & 0x1f;
+        Some(Pixel(self.position, Rgb565::new(r.try_into().unwrap() << 3,
+                                              g.try_into().unwrap() << 2,
+                                              g.try_into().unwrap() << 3)))
     }
 }
 
