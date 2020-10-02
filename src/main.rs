@@ -7,6 +7,7 @@ use embedded_graphics::geometry::Size;
 use embedded_graphics::pixelcolor::Rgb565;
 use embedded_graphics::pixelcolor::raw::RawU16;
 use embedded_graphics::prelude::DrawTarget;
+use embedded_graphics::prelude::RawData;
 use rand::Rng;
 use rand_pcg::Pcg32;
 use std::convert::TryInto;
@@ -26,6 +27,7 @@ enum PointValue {
     Opaque(u16),
 }
 
+#[derive(PartialEq)]
 enum Dir {
     Left,
     Right,
@@ -94,7 +96,7 @@ impl Sprite {
         for frame in (0..3) {
             let frame_index = sprite_data[header_index + frame + 1];
             sprite.frames[frame] =
-                &sprite_data[frame_index..frame_index+num_words];
+                &sprite_data[frame_index.into()..(frame_index+num_words).into()];
         }
 
         sprite
@@ -114,7 +116,7 @@ impl Fish {
             if self.direction == Dir::Left {
                 x = cvt(self.size.width) - (x + 1);
             }
-            self.fish_type.get_point(Point::new(x, y), self.animation)
+            self.fish_type.get_point(&Point::new(x, y), self.animation)
         }
     }
 
@@ -126,7 +128,7 @@ impl Fish {
     }
 
     fn randomize<T: Rng>(&mut self, screen: &Size, rng: &mut T) {
-        self.animation = rng.gen_range(1, NUM_FRAMES);
+        self.animation = rng.gen_range(1, NUM_FRAMES.try_into().wrap());
         if rng.gen() {
             self.direction = Dir::Left;
             self.upper_left.x = cvt(screen.width);
@@ -156,17 +158,17 @@ impl Fish {
         }
 
         self.animation += 1;
-        if self.animation >= NUM_FRAMES {
+        if self.animation >= NUM_FRAMES.try_into().wrap() {
             self.animation = 0;
         }
 
         if self.on_screen(screen) == false {
-            self.randomize(screen. rng);
+            self.randomize(screen, rng);
         }
     }
 
     fn new(sprite: &Sprite) -> Fish {
-        let ff2 = FUDGE_FACTOR * 2;
+        let ff2 = (FUDGE_FACTOR * 2).try_into().wrap();
         Fish {
             fish_type:  sprite,
             upper_left: Point::new(0, 0),
@@ -186,14 +188,14 @@ impl FishTank {
             sprites: [dummy_sprite; NUM_SPRITES],
             fish:    [Fish::new(&dummy_sprite); NUM_FISH],
             size:    screen_size,
-            rng:     Pcg32::new(seed),
+            rng:     Pcg32::new(seed, 0xdefacedbadfacade),
         };
 
         for i in (0..NUM_FISH) { // assumes NUM_FISH <= NUM_SPRITES
             tank.sprites[i] = Sprite::make_sprite(i, sprite_data);
             tank.fish[i]    = Fish::new(&tank.sprites[i]);
-            tank.fish[i].randomize  (tank.size, tank.rng);
-            tank.fish[i].randomize_x(tank.size, tank.rng);
+            tank.fish[i].randomize  (&tank.size, &mut tank.rng);
+            tank.fish[i].randomize_x(&tank.size, &mut tank.rng);
         }
 
         tank
@@ -223,13 +225,13 @@ impl IntoIterator for FishTank {
     type Item = Pixel<Rgb565>;
     type IntoIter = TankIterator;
 
-    fn into_iter(self) -> Self::IntoIter {
+    fn into_iter(&self) -> Self::IntoIter {
         TankIterator::new(self)
     }
 }
 
 impl Drawable<Rgb565> for FishTank {
-    fn draw<D: DrawTarget<Rgb565>>(self, display: &mut D) -> Result<(), D::Error> {
+    fn draw<D: DrawTarget<Rgb565>>(&self, display: &mut D) -> Result<(), D::Error> {
         display.draw_iter(self)
     }
 }
