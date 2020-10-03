@@ -1,6 +1,7 @@
 #![no_std]
 #![no_main]
 
+extern crate libc;
 use panic_halt as _;
 
 use embedded_graphics::prelude::Primitive;
