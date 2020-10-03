@@ -5,9 +5,9 @@ use embedded_graphics::geometry::Point;
 use embedded_graphics::geometry::Size;
 // use embedded_graphics::pixelcolor::PixelColor;
 use embedded_graphics::pixelcolor::Rgb565;
-use embedded_graphics::pixelcolor::raw::RawU16;
+// use embedded_graphics::pixelcolor::raw::RawU16;
 use embedded_graphics::prelude::DrawTarget;
-use embedded_graphics::prelude::RawData;
+// use embedded_graphics::prelude::RawData;
 use rand::Rng;
 use rand_pcg::Pcg32;
 use std::convert::TryInto;
@@ -62,7 +62,7 @@ fn cvt(u: u32) -> i32 {
     u.try_into().unwrap()
 }
 
-impl Sprite {
+impl Sprite<'_> {
     fn get_point(&self, pt: &Point, animation: u8) -> PointValue {
         let x = pt.x - FUDGE_FACTOR;
         let y = pt.y - FUDGE_FACTOR;
@@ -108,7 +108,7 @@ impl Sprite {
     }
 }
 
-impl Fish {
+impl Fish<'_> {
     fn get_point(&self, pt: &Point) -> PointValue {
         if (pt.x < self.upper_left.x ||
             pt.y < self.upper_left.y ||
@@ -187,7 +187,7 @@ impl Fish {
     }
 }
 
-impl FishTank {
+impl FishTank<'_> {
     fn new(screen_size: Size, seed: u64) -> FishTank<'static> {
         let sprite_data = SPRITE_DATA.as_slice_of::<u16>().unwrap();
         let dummy_sprite = Sprite::make_sprite(0, sprite_data);
@@ -228,13 +228,13 @@ impl FishTank {
     }
 }
 
-impl Drawable<Rgb565> for FishTank {
+impl Drawable<Rgb565> for FishTank<'_> {
     fn draw<D: DrawTarget<Rgb565>>(self, display: &mut D) -> Result<(), D::Error> {
         display.draw_iter(TankIterator::new(self))
     }
 }
 
-impl TankIterator {
+impl TankIterator<'_> {
     fn new<'a>(fish_tank: FishTank<'a>) -> TankIterator<'a> {
         TankIterator {
             tank:     fish_tank,
@@ -252,7 +252,7 @@ impl TankIterator {
     }
 }
 
-impl Iterator for TankIterator {
+impl Iterator for TankIterator<'_> {
     type Item = Pixel<Rgb565>;
 
     fn next(&mut self) -> Option<Self::Item> {
