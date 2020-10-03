@@ -66,9 +66,9 @@ impl Sprite<'_> {
     fn get_point(&self, pt: &Point, animation: u8) -> PointValue {
         let x = pt.x - FUDGE_FACTOR;
         let y = pt.y - FUDGE_FACTOR;
-        if (pt.x < 0 || pt.y < 0 ||
+        if pt.x < 0 || pt.y < 0 ||
             pt.x >= cvt(self.size.width) ||
-            pt.y >= cvt(self.size.height)) {
+            pt.y >= cvt(self.size.height) {
             PointValue::Transparent
         } else {
             let x: usize = x.try_into().unwrap();
@@ -98,7 +98,7 @@ impl Sprite<'_> {
             frames: [&[]; NUM_FRAMES],
         };
 
-        for frame in (0..3) {
+        for frame in 0..3 {
             let frame_index = sprite_data[header_index + frame + 1];
             sprite.frames[frame] =
                 &sprite_data[frame_index.into()..(frame_index+num_words).into()];
@@ -110,10 +110,10 @@ impl Sprite<'_> {
 
 impl Fish<'_> {
     fn get_point(&self, pt: &Point) -> PointValue {
-        if (pt.x < self.upper_left.x ||
+        if pt.x < self.upper_left.x ||
             pt.y < self.upper_left.y ||
             pt.x >= self.upper_left.x + cvt(self.size.width) ||
-            pt.y >= self.upper_left.y + cvt(self.size.height)) {
+            pt.y >= self.upper_left.y + cvt(self.size.height) {
             PointValue::OutOfRange
         } else {
             let mut x = pt.x - self.upper_left.x;
@@ -126,10 +126,10 @@ impl Fish<'_> {
     }
 
     fn on_screen(&self, screen: &Size) -> bool {
-        (self.upper_left.y <= cvt(screen.height) &&
-         self.upper_left.y + cvt(self.size.height) >= 0 &&
-         self.upper_left.x <= cvt(screen.width) &&
-         self.upper_left.x + cvt(self.size.width) >= 0)
+        self.upper_left.y <= cvt(screen.height) &&
+            self.upper_left.y + cvt(self.size.height) >= 0 &&
+            self.upper_left.x <= cvt(screen.width) &&
+            self.upper_left.x + cvt(self.size.width) >= 0
     }
 
     fn randomize<T: Rng>(&mut self, screen: &Size, rng: &mut T) {
@@ -198,7 +198,7 @@ impl FishTank<'_> {
             rng:     Pcg32::new(seed, 0xdefacedbadfacade),
         };
 
-        for i in (0..NUM_FISH) { // assumes NUM_FISH <= NUM_SPRITES
+        for i in 0..NUM_FISH { // assumes NUM_FISH <= NUM_SPRITES
             tank.sprites[i] = Sprite::make_sprite(i, sprite_data);
             tank.fish[i]    = Fish::new(&tank.sprites[i]);
             tank.fish[i].randomize  (&tank.size, &mut tank.rng);
@@ -209,14 +209,14 @@ impl FishTank<'_> {
     }
 
     fn swim(&mut self) {
-        for i in (0..NUM_FISH) {
+        for i in 0..NUM_FISH {
             self.fish[i].swim(&self.size, &mut self.rng);
         }
     }
 
     fn get_point(&self, pt: &Point) -> PointValue {
         let mut ret = PointValue::OutOfRange;
-        for i in (0..NUM_FISH) {
+        for i in 0..NUM_FISH {
             match self.fish[i].get_point(pt) {
                 PointValue::Opaque(c)   => return PointValue::Opaque(c),
                 PointValue::Transparent => ret = PointValue::Transparent,
