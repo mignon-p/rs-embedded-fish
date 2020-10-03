@@ -51,7 +51,7 @@ struct Sprite<'a> {
 
 #[derive(Copy, Clone)]
 struct Fish<'a> {
-    fish_type:  &'a Sprite<'a>,
+    fish_type:  Sprite<'a>,
     upper_left: Point,
     size:       Size,
     direction:  Dir,
@@ -186,7 +186,7 @@ impl Fish<'_> {
         }
     }
 
-    fn new<'a>(sprite: &'a Sprite) -> Fish<'a> {
+    fn new<'a>(sprite: Sprite<'a>) -> Fish<'a> {
         let ff2: u32 = (FUDGE_FACTOR * 2).try_into().unwrap();
         Fish {
             fish_type:  sprite,
@@ -205,14 +205,14 @@ impl FishTank<'_> {
         let dummy_sprite = Sprite::make_sprite(0, sprite_data);
         let mut tank = FishTank {
             sprites: [dummy_sprite; NUM_SPRITES],
-            fish:    [Fish::new(&dummy_sprite); NUM_FISH],
+            fish:    [Fish::new(dummy_sprite); NUM_FISH],
             size:    screen_size,
             rng:     Pcg32::new(seed, 0xdefacedbadfacade),
         };
 
         for i in 0..NUM_FISH { // assumes NUM_FISH <= NUM_SPRITES
             tank.sprites[i] = Sprite::make_sprite(i, sprite_data);
-            tank.fish[i]    = Fish::new(&tank.sprites[i]);
+            tank.fish[i]    = Fish::new(tank.sprites[i]);
             tank.fish[i].randomize  (&tank.size, &mut tank.rng);
             tank.fish[i].randomize_x(&tank.size, &mut tank.rng);
         }
@@ -316,7 +316,7 @@ fn main() -> ! {
         .draw(&mut lcd)
         .unwrap();
 
-    let fish_tank = FishTank::new(lcd.size(), 0x1badd00d8badbeef);
+    let mut fish_tank = FishTank::new(lcd.size(), 0x1badd00d8badbeef);
 
     loop {
         lcd.draw_iter(TankIterator::new(&fish_tank)).unwrap();
