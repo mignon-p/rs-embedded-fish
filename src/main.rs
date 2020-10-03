@@ -37,17 +37,19 @@ enum PointValue {
     Opaque(u16),
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Copy, Clone)]
 enum Dir {
     Left,
     Right,
 }
 
+#[derive(Copy, Clone)]
 struct Sprite<'a> {
     size: Size,
     frames: [&'a [u16]; NUM_FRAMES],
 }
 
+#[derive(Copy, Clone)]
 struct Fish<'a> {
     fish_type:  &'a Sprite<'a>,
     upper_left: Point,
