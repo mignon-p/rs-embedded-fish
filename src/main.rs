@@ -33,28 +33,28 @@ enum Dir {
     Right,
 }
 
-struct Sprite {
+struct Sprite<'a> {
     size: Size,
-    frames: [&[u16]; NUM_FRAMES],
+    frames: [&'a [u16]; NUM_FRAMES],
 }
 
-struct Fish {
-    fish_type:  &Sprite,
+struct Fish<'a> {
+    fish_type:  &'a Sprite<'a>,
     upper_left: Point,
     size:       Size,
     direction:  Dir,
     animation:  u8,
 }
 
-struct FishTank {
-    sprites: [Sprite; NUM_SPRITES],
-    fish:    [Fish;   NUM_FISH],
+struct FishTank<'a> {
+    sprites: [Sprite<'a>; NUM_SPRITES],
+    fish:    [Fish<'a>;   NUM_FISH],
     size:    Size,
     rng:     Pcg32,
 }
 
-struct TankIterator {
-    tank:     &FishTank,
+struct TankIterator<'a> {
+    tank:     &'a FishTank<'a>,
     position: Point,
 }
 
@@ -174,7 +174,7 @@ impl Fish {
         }
     }
 
-    fn new(sprite: &Sprite) -> Fish {
+    fn new<'a>(sprite: &'a Sprite) -> Fish<'a> {
         let ff2: u32 = (FUDGE_FACTOR * 2).try_into().unwrap();
         Fish {
             fish_type:  sprite,
@@ -188,7 +188,7 @@ impl Fish {
 }
 
 impl FishTank {
-    fn new(screen_size: Size, seed: u64) -> FishTank {
+    fn new(screen_size: Size, seed: u64) -> FishTank<'static> {
         let sprite_data = SPRITE_DATA.as_slice_of::<u16>().unwrap();
         let dummy_sprite = Sprite::make_sprite(0, sprite_data);
         let mut tank = FishTank {
@@ -235,7 +235,7 @@ impl Drawable<Rgb565> for FishTank {
 }
 
 impl TankIterator {
-    fn new(fish_tank: &FishTank) -> TankIterator {
+    fn new<'a>(fish_tank: &'a FishTank) -> TankIterator<'a> {
         TankIterator {
             tank:     fish_tank,
             position: Point::new(0, 0),
