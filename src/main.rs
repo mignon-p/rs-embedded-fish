@@ -3,6 +3,9 @@
 
 use panic_halt as _;
 
+use embedded_graphics::prelude::Primitive;
+use embedded_graphics::primitive_style;
+use embedded_graphics::primitives::Rectangle;
 use gd32vf103xx_hal::pac;
 use gd32vf103xx_hal::prelude::*;
 use longan_nano::{lcd, lcd_pins};
@@ -13,11 +16,8 @@ use embedded_graphics::drawable::Drawable;
 use embedded_graphics::drawable::Pixel;
 use embedded_graphics::geometry::Point;
 use embedded_graphics::geometry::Size;
-// use embedded_graphics::pixelcolor::PixelColor;
 use embedded_graphics::pixelcolor::Rgb565;
-// use embedded_graphics::pixelcolor::raw::RawU16;
-use embedded_graphics::prelude::DrawTarget;
-// use embedded_graphics::prelude::RawData;
+// use embedded_graphics::prelude::DrawTarget;
 use rand::Rng;
 use rand_pcg::Pcg32;
 use std::convert::TryInto;
@@ -64,7 +64,7 @@ struct FishTank<'a> {
 }
 
 struct TankIterator<'a> {
-    tank:     FishTank<'a>,
+    tank:     &'a FishTank<'a>,
     position: Point,
 }
 
@@ -197,7 +197,6 @@ impl Fish<'_> {
     }
 }
 
-#[derive(Copy, Clone)]
 impl FishTank<'_> {
     fn new(screen_size: Size, seed: u64) -> FishTank<'static> {
         let sprite_data = SPRITE_DATA.as_slice_of::<u16>().unwrap();
@@ -239,14 +238,8 @@ impl FishTank<'_> {
     }
 }
 
-impl Drawable<Rgb565> for FishTank<'_> {
-    fn draw<D: DrawTarget<Rgb565>>(self, display: &mut D) -> Result<(), D::Error> {
-        display.draw_iter(TankIterator::new(self))
-    }
-}
-
 impl TankIterator<'_> {
-    fn new<'a>(fish_tank: FishTank<'a>) -> TankIterator<'a> {
+    fn new<'a>(fish_tank: &'a FishTank<'a>) -> TankIterator<'a> {
         TankIterator {
             tank:     fish_tank,
             position: Point::new(0, 0),
@@ -324,7 +317,7 @@ fn main() -> ! {
     let fish_tank = FishTank::new(lcd.size(), 0x1badd00d8badbeef);
 
     loop {
-        fish_tank.draw(&mut lcd).unwrap();
+        lcd.draw_iter(TankIterator::new(&fish_tank)).unwrap();
         fish_tank.swim();
     }
 }
