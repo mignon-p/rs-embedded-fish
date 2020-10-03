@@ -79,9 +79,9 @@ impl Sprite<'_> {
     fn get_point(&self, pt: &Point, animation: u8) -> PointValue {
         let x = pt.x - FUDGE_FACTOR;
         let y = pt.y - FUDGE_FACTOR;
-        if pt.x < 0 || pt.y < 0 ||
-            pt.x >= cvt(self.size.width) ||
-            pt.y >= cvt(self.size.height) {
+        if x < 0 || y < 0 ||
+            x >= cvt(self.size.width) ||
+            y >= cvt(self.size.height) {
             PointValue::Transparent
         } else {
             let x: usize = x.try_into().unwrap();
