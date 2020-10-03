@@ -18,4 +18,4 @@ riscv = "0.5.4"
 # st7735-lcd = { version = "0.7", optional = true }
 riscv-rt = "0.6.1"
 panic-halt = "0.2.0"
-longan-nano = { git = "https://github.com/riscv-rust/longan-nano.git", rev = "34c172a720467bc14a1fbef89e1135003a3166e7" }
+longan-nano = { git = "https://github.com/riscv-rust/longan-nano.git", rev = "34c172a720467bc14a1fbef89e1135003a3166e7", features = ["lcd"] }

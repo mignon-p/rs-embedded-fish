@@ -12,15 +12,15 @@ use longan_nano::{lcd, lcd_pins};
 use riscv_rt::entry;
 
 use byte_slice_cast::*;
+use core::convert::TryInto;
 use embedded_graphics::drawable::Drawable;
 use embedded_graphics::drawable::Pixel;
 use embedded_graphics::geometry::Point;
 use embedded_graphics::geometry::Size;
 use embedded_graphics::pixelcolor::Rgb565;
-// use embedded_graphics::prelude::DrawTarget;
+use embedded_graphics::prelude::DrawTarget;
 use rand::Rng;
 use rand_pcg::Pcg32;
-use std::convert::TryInto;
 
 const FUDGE_FACTOR: i32 = 2;
 const NUM_FRAMES: usize = 3;
