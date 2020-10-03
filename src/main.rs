@@ -54,7 +54,7 @@ struct FishTank<'a> {
 }
 
 struct TankIterator<'a> {
-    tank:     &'a FishTank<'a>,
+    tank:     FishTank<'a>,
     position: Point,
 }
 
@@ -229,13 +229,13 @@ impl FishTank {
 }
 
 impl Drawable<Rgb565> for FishTank {
-    fn draw<D: DrawTarget<Rgb565>>(&self, display: &mut D) -> Result<(), D::Error> {
+    fn draw<D: DrawTarget<Rgb565>>(self, display: &mut D) -> Result<(), D::Error> {
         display.draw_iter(TankIterator::new(self))
     }
 }
 
 impl TankIterator {
-    fn new<'a>(fish_tank: &'a FishTank) -> TankIterator<'a> {
+    fn new<'a>(fish_tank: FishTank<'a>) -> TankIterator<'a> {
         TankIterator {
             tank:     fish_tank,
             position: Point::new(0, 0),
