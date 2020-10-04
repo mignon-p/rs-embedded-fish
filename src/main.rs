@@ -29,6 +29,7 @@ const NUM_SPRITES: usize = 10;
 const NUM_FISH: usize = 10;
 const TRANSPARENT: u16 = 0xdead;
 const BACKGROUND: u16 = 0x1f;   // blue
+const ANIMATION_SPEED: u8 = 2;
 
 const SPRITE_DATA: &[u8] = include_bytes!("fish.raw");
 
@@ -134,7 +135,8 @@ impl Fish<'_> {
             if self.direction == Dir::Left {
                 x = cvt(self.size.width) - (x + 1);
             }
-            self.fish_type.get_point(&Point::new(x, y), self.animation)
+            self.fish_type.get_point(&Point::new(x, y),
+                                     self.animation / ANIMATION_SPEED)
         }
     }
 
@@ -148,7 +150,7 @@ impl Fish<'_> {
     fn randomize<T: Rng>(&mut self, screen: &Size, rng: &mut T) {
         let lo: u8 = 0;
         let hi: u8 = NUM_FRAMES.try_into().unwrap();
-        self.animation = rng.gen_range(lo, hi);
+        self.animation = rng.gen_range(lo, hi * ANIMATION_SPEED);
         if rng.gen() {
             self.direction = Dir::Left;
             self.upper_left.x = cvt(screen.width);
@@ -166,7 +168,7 @@ impl Fish<'_> {
     }
 
     fn swim<T: Rng>(&mut self, screen: &Size, rng: &mut T) {
-        if rng.gen() {
+        if rng.gen_ratio(3, 4) {
             self.upper_left.x += match self.direction {
                 Dir::Left => -1,
                 Dir::Right => 1,
@@ -178,7 +180,8 @@ impl Fish<'_> {
         }
 
         self.animation += 1;
-        if self.animation >= NUM_FRAMES.try_into().unwrap() {
+        let num_frames: u8 = NUM_FRAMES.try_into().unwrap();
+        if self.animation >= num_frames * ANIMATION_SPEED {
             self.animation = 0;
         }
 
@@ -317,7 +320,7 @@ fn main() -> ! {
         .draw(&mut lcd)
         .unwrap();
 
-    let mut fish_tank = FishTank::new(lcd.size(), 0x1badd00d8badbeef);
+    let mut fish_tank = FishTank::new(lcd.size(), 0x1badd00d8badf00d);
 
     loop {
         lcd.draw_iter(TankIterator::new(&fish_tank)).unwrap();
