@@ -4,9 +4,6 @@
 extern crate libc;
 use panic_halt as _;
 
-use embedded_graphics::prelude::Primitive;
-use embedded_graphics::primitive_style;
-use embedded_graphics::primitives::Rectangle;
 use gd32vf103xx_hal::pac;
 use gd32vf103xx_hal::prelude::*;
 use longan_nano::{lcd, lcd_pins};
@@ -14,7 +11,6 @@ use riscv_rt::entry;
 
 use byte_slice_cast::*;
 use core::convert::TryInto;
-use embedded_graphics::drawable::Drawable;
 use embedded_graphics::drawable::Pixel;
 use embedded_graphics::geometry::Point;
 use embedded_graphics::geometry::Size;
@@ -312,13 +308,9 @@ fn main() -> ! {
 
     let lcd_pins = lcd_pins!(gpioa, gpiob);
     let mut lcd = lcd::configure(dp.SPI0, lcd_pins, &mut afio, &mut rcu);
-    let (width, height) = (lcd.size().width as i32, lcd.size().height as i32);
 
     // Clear screen
-    Rectangle::new(Point::new(0, 0), Point::new(width - 1, height - 1))
-        .into_styled(primitive_style!(fill_color = Rgb565::new(0, 0, 0x1f)))
-        .draw(&mut lcd)
-        .unwrap();
+    lcd.clear(Rgb565::from(Rgb565::new(0, 0, 0x1f))).unwrap();
 
     let mut fish_tank = FishTank::new(lcd.size(), 0x1badd00d8badf00d);
 
