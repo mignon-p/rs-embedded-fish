@@ -20,14 +20,28 @@ use embedded_graphics::prelude::DrawTarget;
 use rand::Rng;
 use rand_pcg::Pcg32;
 
-const FUDGE_FACTOR: i32 = 2;
-const NUM_FRAMES: usize = 3;
-const NUM_SPRITES: usize = 10;
+// Number of fish on the screen at once.  Does not have to equal NUM_SPRITES.
 const NUM_FISH: usize = 10;
-const TRANSPARENT: u16 = 0xdead;
-const BACKGROUND: u16 = 0x1f;   // blue
+
+// For the two fish that are animated, controls how fast their mouths
+// open and close.  Larger is slower.  1 is fastest.
 const ANIMATION_SPEED: u8 = 2;
 
+// Color of the water, in RGB565 format.
+const BACKGROUND: u16 = 0x1f;   // blue
+
+// This is for making sure that the area around the fish gets erased.
+// As long as the fish don't move by more than one pixel at a time,
+// 1 should be sufficient.
+const FUDGE_FACTOR: i32 = 1;
+
+// These three constants are baked into fish.raw, so don't change them
+// unless fish.raw changes.
+const NUM_FRAMES: usize = 3;
+const NUM_SPRITES: usize = 10;
+const TRANSPARENT: u16 = 0xdead;
+
+// This file contains the fish images.
 const SPRITE_DATA: &[u8] = include_bytes!("fish.raw");
 
 enum PointValue {
@@ -58,7 +72,6 @@ struct Fish<'a> {
 }
 
 struct FishTank<'a> {
-    sprites: [Sprite<'a>; NUM_SPRITES],
     fish:    [Fish<'a>;   NUM_FISH],
     size:    Size,
     rng:     Pcg32,
@@ -209,15 +222,14 @@ impl FishTank<'_> {
         let sprite_data = SPRITE_DATA.as_slice_of::<u16>().unwrap();
         let dummy_sprite = Sprite::make_sprite(0, sprite_data);
         let mut tank = FishTank {
-            sprites: [dummy_sprite; NUM_SPRITES],
             fish:    [Fish::new(dummy_sprite); NUM_FISH],
             size:    screen_size,
             rng:     Pcg32::new(seed, 0xdefacedbadfacade),
         };
 
-        for i in 0..NUM_FISH { // assumes NUM_FISH <= NUM_SPRITES
-            tank.sprites[i] = Sprite::make_sprite(i, sprite_data);
-            tank.fish[i]    = Fish::new(tank.sprites[i]);
+        for i in 0..NUM_FISH {
+            let sprite = Sprite::make_sprite(i % NUM_SPRITES, sprite_data);
+            tank.fish[i] = Fish::new(sprite);
             tank.fish[i].randomize  (&tank.size, &mut tank.rng);
             tank.fish[i].randomize_x(&tank.size, &mut tank.rng);
         }
