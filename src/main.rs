@@ -253,9 +253,9 @@ impl TankIterator<'_> {
         let r = c >> 11;
         let g = (c >> 5) & 0x3f;
         let b = c & 0x1f;
-        Some(Pixel(self.position, Rgb565::new((r << 3).try_into().unwrap(),
-                                              (g << 2).try_into().unwrap(),
-                                              (b << 3).try_into().unwrap())))
+        Some(Pixel(self.position, Rgb565::new(r.try_into().unwrap(),
+                                              g.try_into().unwrap(),
+                                              b.try_into().unwrap())))
     }
 }
 
@@ -313,7 +313,7 @@ fn main() -> ! {
 
     // Clear screen
     Rectangle::new(Point::new(0, 0), Point::new(width - 1, height - 1))
-        .into_styled(primitive_style!(fill_color = Rgb565::new(0, 0, 0xff)))
+        .into_styled(primitive_style!(fill_color = Rgb565::new(0, 0, 0x1f)))
         .draw(&mut lcd)
         .unwrap();
 
