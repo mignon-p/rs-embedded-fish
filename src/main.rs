@@ -15,6 +15,7 @@ use embedded_graphics::drawable::Pixel;
 use embedded_graphics::geometry::Point;
 use embedded_graphics::geometry::Size;
 use embedded_graphics::pixelcolor::Rgb565;
+use embedded_graphics::pixelcolor::raw::RawU16;
 use embedded_graphics::prelude::DrawTarget;
 use rand::Rng;
 use rand_pcg::Pcg32;
@@ -70,6 +71,10 @@ struct TankIterator<'a> {
 
 fn cvt(u: u32) -> i32 {
     u.try_into().unwrap()
+}
+
+fn rgb565(packed: u16) -> Rgb565 {
+    Rgb565::from(RawU16::new(packed))
 }
 
 impl Sprite<'_> {
@@ -249,12 +254,7 @@ impl TankIterator<'_> {
     }
 
     fn some_color(&self, c: u16) -> Option<Pixel<Rgb565>> {
-        let r = c >> 11;
-        let g = (c >> 5) & 0x3f;
-        let b = c & 0x1f;
-        Some(Pixel(self.position, Rgb565::new(r.try_into().unwrap(),
-                                              g.try_into().unwrap(),
-                                              b.try_into().unwrap())))
+        Some(Pixel(self.position, rgb565(c)))
     }
 }
 
@@ -310,7 +310,7 @@ fn main() -> ! {
     let mut lcd = lcd::configure(dp.SPI0, lcd_pins, &mut afio, &mut rcu);
 
     // Clear screen
-    lcd.clear(Rgb565::from(Rgb565::new(0, 0, 0x1f))).unwrap();
+    lcd.clear(rgb565(BACKGROUND)).unwrap();
 
     let mut fish_tank = FishTank::new(lcd.size(), 0x1badd00d8badf00d);
 
