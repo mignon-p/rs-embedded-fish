@@ -14,7 +14,9 @@ by embedded-graphics.
 The Longan Nano is supported by the [longan-nano][18] crate, which I
 previously tried out in [a blog post][22].
 
-![Longan Nano running fish tank program](longan-fish.jpg)
+[![Longan Nano running fish tank program](longan-fish.jpg)][27]
+
+[video][28]
 
 ## Instructions
 
@@ -109,3 +111,5 @@ I've copied a few lines of code from the examples in the
 [24]: https://sourceforge.net/p/feri/svn/HEAD/tree/trunk/AndFish/res/drawable-mdpi/
 [25]: https://f-droid.org/en/packages/de.hechler.andfish/
 [26]: https://github.com/riscv-rust/longan-nano#license
+[27]: https://www.flickr.com/photos/107479024@N04/50420943588/in/album-72157716259990378/
+[28]: https://www.flickr.com/photos/107479024@N04/50420946023/in/album-72157716259990378/
