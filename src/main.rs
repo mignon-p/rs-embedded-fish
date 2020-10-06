@@ -1,7 +1,6 @@
 #![no_std]
 #![no_main]
 
-extern crate libc;
 use panic_halt as _;
 
 use gd32vf103xx_hal::pac;

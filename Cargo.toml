@@ -17,10 +17,3 @@ riscv = "0.5.4"
 riscv-rt = "0.6.1"
 panic-halt = "0.2.0"
 longan-nano = { git = "https://github.com/riscv-rust/longan-nano.git", rev = "34c172a720467bc14a1fbef89e1135003a3166e7", features = ["lcd"] }
-libc = { version = "0.2.14", default-features = false }
-
-[profile.dev]
-panic = "abort"
-
-[profile.release]
-panic = "abort"
