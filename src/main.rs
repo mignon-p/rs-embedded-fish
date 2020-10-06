@@ -8,11 +8,10 @@ use gd32vf103xx_hal::prelude::*;
 use longan_nano::{lcd, lcd_pins};
 use riscv_rt::entry;
 
-use byte_slice_cast::*;
+use byte_slice_cast::AsSliceOf;
 use core::convert::TryInto;
 use embedded_graphics::drawable::Pixel;
-use embedded_graphics::geometry::Point;
-use embedded_graphics::geometry::Size;
+use embedded_graphics::geometry::{Point, Size};
 use embedded_graphics::pixelcolor::Rgb565;
 use embedded_graphics::pixelcolor::raw::RawU16;
 use embedded_graphics::prelude::DrawTarget;
