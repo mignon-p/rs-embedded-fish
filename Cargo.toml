@@ -12,8 +12,6 @@ embedded-graphics = "0.6.2"
 rand = { version = "0.7.3", default-features = false }
 rand_pcg = "0.2.1"
 gd32vf103xx-hal = "0.3.0"
-embedded-hal = "0.2.3"
-riscv = "0.5.4"
 riscv-rt = "0.6.1"
 panic-halt = "0.2.0"
 longan-nano = { git = "https://github.com/riscv-rust/longan-nano.git", rev = "34c172a720467bc14a1fbef89e1135003a3166e7", features = ["lcd"] }

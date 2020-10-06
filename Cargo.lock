@@ -278,13 +278,11 @@ version = "0.1.0"
 dependencies = [
  "byte-slice-cast",
  "embedded-graphics",
- "embedded-hal",
  "gd32vf103xx-hal",
  "longan-nano",
  "panic-halt",
  "rand 0.7.3",
  "rand_pcg",
- "riscv",
  "riscv-rt",
 ]
 
